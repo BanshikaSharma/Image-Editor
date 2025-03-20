@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>✮Image-Editor✮</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        #canvas {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            overflow: hidden;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: 100% 100%;
+        }
+
+        .selected-tool {
+            color: blue;
+        }
+
+        .draggable {
+            position: absolute;
+            cursor: move;
+        }
+
+        .resizable {
+            position: relative;
+        }
+
+        .resize-handle {
+            width: 10px;
+            height: 10px;
+            background: red;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            cursor: nwse-resize;
+        }
+
+        .selected {
+            border: 2px dashed blue;
+        }
+
+        body {
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: 100% 100%;
+            background-image: url('images/image11.jpg');
+        }
+    </style>
+</head>
+<body class="font-roboto bg-darkviolet text-white">
+    <div class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-darkviolet text-white shadow-md p-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img alt="App logo" class="h-10 w-10" src="images/logogum.jpg"/>
+                <h1 class="text-xl font-bold">❀Image-Editor❀</h1>
+            </div>
+            <nav class="flex space-x-4">
+                <a class="text-white hover:text-gray-300" href="#">Home</a>
+                <a class="text-white hover:text-gray-300" href="#">Account</a>
+            </nav>
+        </header>
+        <!-- Main Content -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside class="bg-darkviolet w-64 p-4 overflow-y-auto">
+                <h2 class="text-lg font-semibold mb-4">Tools</h2>
+                <ul class="space-y-2">
+                    <li class="flex items-center space-x-2 tool" data-tool="text" onclick="addText()">
+                        <i class="fas fa-font text-white"></i>
+                        <span class="text-white" id="textTool">Text</span>
+                    </li>
+                    <li class="flex items-center space-x-2 tool" data-tool="shapes" onclick="addShape()">
+                        <i class="fas fa-shapes"></i>
+                        <span class="text-white">Shapes</span>
+                        <select class="ml-2 bg-darkviolet text-purple-900 border border-purple rounded" id="shapeSelector">
+                            <option value="">No Effect</option>
+                            <option value="😊">snow</option>
+                            <option value="┊         ┊       ┊   ┊    ┊        ┊
+                            ┊         ┊       ┊   ┊   ˚★⋆｡˚  ⋆˚★       ˚★      ˚★
+                            ┊         ┊       ┊   ⋆
+                            ┊         ┊       ★⋆
+                            ┊ ◦         ˚★
+                            ★⋆ ">Classy</option>
+                            <option value="*ੈ✩‧₊˚༺☆༻*ੈ✩‧₊˚">curvy</option>
+                            <option value="｡ ₊°༺❤︎༻°₊ ｡">Heart</option>
+                            <option value="˚˖𓍢ִ໋🦢˚">swan</option>
+                            <option value="✦•┈๑⋅⋯ ⋯⋅๑┈•✦">Long thread</option>
+                            <option value="જ⁀➴⠀𝓈𝓌𝑒𝑒𝓉𝒽𝑒𝒶𝓇𝓉 જ⁀➴"> Love</option>
+                            <option value="˚ ༘ ೀ⋆｡˚">Random</option>
+                        </select>
+                    </li>
+                    <li class="flex items-center space-x-2 tool" data-tool="images" onclick="addImage()">
+                        <i class="fas fa-image text-white"></i>
+                        <span class="text-white">Images</span>
+                    </li>
+                    <li class="flex items-center space-x-2 tool" data-tool="colors">
+                        <i class="fas fa-palette text-white"></i>
+                        <span class="text-white">Colors</span>
+                    </li>
+                    <li class="flex items-center space-x-2 tool" data-tool="background">
+                        <i class="fas fa-fill-drip text-white"></i>
+                        <span class="text-white">Background</span>
+                    </li>
+                </ul>
+                <button class="mt-4 w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600" id="deleteBtn">
+                    Delete Selected
+                </button>
+            </aside>
+            <!-- Canvas Area -->
+            <main class="flex-1 bg-gray-200 p-4 overflow-y-auto">
+                <div class="bg-white shadow-md rounded-lg p-4 h-full">
+                    <h2 class="text-lg font-semibold mb-4">Canvas</h2>
+                    <div class="border-2 border-dashed border-gray-300 h-full relative" id="canvas">
+                        <span class="text-gray-500">Banshika</span>
+                    </div>
+                </div>
+            </main>
+            <!-- Properties Panel -->
+            <aside class="bg-darkviolet w-64 p-4 overflow-y-auto">
+                <h2 class="text-lg font-semibold mb-4">Properties</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-white">Font Size</label>
+                        <input class="w-full" id="fontSize" max="100" min="10" type="range" value="16"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Font Style</label>
+                        <select class="w-full text-purple-900" id="fontStyle">
+                            <option value="normal">Normal</option>
+                            <option value="italic">Italic</option>
+                            <option value="bold">Bold</option>
+                            <option value="bold italic">Bold Italic</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white">Image Size</label>
+                        <input class="w-full" id="imageSize" max="500" min="50" type="range" value="100"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Color</label>
+                        <input class="w-full" id="textColor" type="color" value="#000000"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Opacity</label>
+                        <input class="w-full" id="opacity" max="100" min="0" type="range" value="100"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Background Color</label>
+                        <input class="w-full" id="bgColor" type="color" value="#ffffff"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Background Image</label>
+                        <input accept="image/*" class="w-full" id="bgImage" type="file"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Upload Images</label>
+                        <input accept="image/*" class="w-full" id="uploadImages" multiple="" type="file"/>
+                    </div>
+                    <div>
+                        <label class="block text-white">Shape Color</label>
+                        <input class="w-full" id="shapeColor" type="color" value="#000000"/>
+                    </div>
+                    <div class="mt-4">
+                        <button class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600" id="downloadBtn">
+                            Download Design
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+        <footer class="bg">
+            <div class="mt-1">
+              <a class="text-purple-400 hover:text-pink-100 mx-5" href="https://59cd-2401-4900-1cbc-174a-b135-7140-1153-a96c.ngrok-free.app/moodBoardProfiles" class="text-black"><i class="fas fa-home fa-2x"></i></a>
+            </div>
+          </footer>
+    </div>
+    <canvas id="hiddenCanvas" style="display:none;"></canvas>
+    <script>
+        const tools = document.querySelectorAll('.tool');
+        const canvas = document.getElementById('canvas');
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
+        const fontSizeInput = document.getElementById('fontSize');
+        const fontStyleInput = document.getElementById('fontStyle');
+        const imageSizeInput = document.getElementById('imageSize');
+        const textColorInput = document.getElementById('textColor');
+        const opacityInput = document.getElementById('opacity');
+        const bgColorInput = document.getElementById('bgColor');
+        const bgImageInput = document.getElementById('bgImage');
+        const uploadImagesInput = document.getElementById('uploadImages');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const textTool = document.getElementById('textTool');
+        const shapeSelector = document.getElementById('shapeSelector');
+
+        let currentTool = null;
+        let selectedElement = null;
+
+        tools.forEach(tool => {
+            tool.addEventListener('click', () => {
+                tools.forEach(t => t.classList.remove('selected-tool'));
+                tool.classList.add('selected-tool');
+                currentTool = tool.dataset.tool;
+            });
+        });
+
+        fontSizeInput.addEventListener('input', () => {
+            if (selectedElement && (selectedElement.tagName === 'DIV' || selectedElement.classList.contains('emoji'))) {
+                selectedElement.style.fontSize = `${fontSizeInput.value}px`;
+            }
+        });
+
+        fontStyleInput.addEventListener('change', () => {
+            if (selectedElement && selectedElement.tagName === 'DIV' && !selectedElement.classList.contains('emoji')) {
+                selectedElement.style.fontStyle = fontStyleInput.value.includes('italic') ? 'italic' : 'normal';
+                selectedElement.style.fontWeight = fontStyleInput.value.includes('bold') ? 'bold' : 'normal';
+            }
+        });
+
+        imageSizeInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.tagName === 'IMG') {
+                selectedElement.style.width = `${imageSizeInput.value}px`;
+                selectedElement.style.height = 'auto'; // Maintain aspect ratio
+            }
+        });
+
+        textColorInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.tagName === 'DIV' && !selectedElement.classList.contains('emoji')) {
+                selectedElement.style.color = textColorInput.value;
+            }
+        });
+
+        bgColorInput.addEventListener('input', () => {
+            canvas.style.backgroundColor = bgColorInput.value;
+        });
+
+        bgImageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    canvas.style.backgroundImage = `url(${e.target.result})`;
+                    canvas.style.backgroundSize = 'cover';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function addText() {
+            const textElement = document.createElement('div');
+            textElement.textContent = 'Double-click to edit';
+            textElement.classList.add('draggable');
+            textElement.style.position = 'absolute';
+            textElement.style.top = '50px';
+            textElement.style.left = '50px';
+            textElement.style.fontSize = `${fontSizeInput.value}px`;
+            textElement.style.color = textColorInput.value;
+            textElement.style.fontStyle = fontStyleInput.value.includes('italic') ? 'italic' : 'normal';
+            textElement.style.fontWeight = fontStyleInput.value.includes('bold') ? 'bold' : 'normal';
+            textElement.contentEditable = true;
+
+            textElement.addEventListener('dblclick', () => {
+                textElement.contentEditable = true;
+                textElement.focus();
+            });
+
+            textElement.addEventListener('blur', () => {
+                textElement.contentEditable = false;
+            });
+
+            makeDraggable(textElement);
+            canvas.appendChild(textElement);
+        }
+
+        function addImage() {
+            uploadImagesInput.click();
+        }
+
+        function addShape() {
+    const shape = shapeSelector.value;
+    const shapeColor = document.getElementById('shapeColor').value; // Get the selected color
+    const shapeElement = document.createElement('div');
+    shapeElement.textContent = shape;
+    shapeElement.classList.add('draggable', 'emoji', 'resizable');
+    shapeElement.style.fontSize = '50px';
+    shapeElement.style.position = 'absolute';
+    shapeElement.style.top = `${Math.random() * 300}px`;
+    shapeElement.style.left = `${Math.random() * 300}px`;
+    shapeElement.style.color = shapeColor; // Set the color of the shape
+
+    // Create a resize handle
+    const resizeHandle = document.createElement('div');
+    resizeHandle.classList.add('resize-handle');
+    shapeElement.appendChild(resizeHandle);
+
+    makeDraggable(shapeElement);
+    makeResizable(shapeElement);
+    canvas.appendChild(shapeElement);
+}
+        uploadImagesInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.classList.add('draggable', 'resizable');
+                    img.style.width = `${imageSizeInput.value}px`; // Set a default width
+                    img.style.top = '50px'; // Set a default position
+                    img.style.left = '50px'; // Set a default position
+                    img.draggable = true;
+
+                    // Create a resize handle
+                    const resizeHandle = document.createElement('div');
+                    resizeHandle.classList.add('resize-handle');
+                    img.appendChild(resizeHandle);
+
+                    makeDraggable(img);
+                    canvas.appendChild(img);
+
+                    // Add event listener for resizing
+                    resizeHandle.addEventListener('mousedown', (event) => {
+                        const startWidth = img.offsetWidth;
+                        const startHeight = img.offsetHeight;
+                        const startX = event.clientX;
+                        const startY = event.clientY;
+
+                        const resizeElement = (resizeEvent) => {
+                            const newWidth = startWidth + (resizeEvent.clientX - startX);
+                            const newHeight = startHeight + (resizeEvent.clientY - startY);
+                            img.style.width = `${newWidth}px`;
+                            img.style.height = `${newHeight}px`;
+                        };
+
+                        const stopResizing = () => {
+                            document.removeEventListener('mousemove', resizeElement);
+                            document.removeEventListener('mouseup', stopResizing);
+                        };
+
+                        document.addEventListener('mousemove', resizeElement);
+                        document.addEventListener('mouseup', stopResizing);
+                        event.stopPropagation(); // Prevent triggering the image drag
+                    });
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            element.addEventListener('mousedown', (event) => {
+                isDragging = true;
+                selectedElement = element;
+                startX = event.clientX;
+                startY = event.clientY;
+                initialX = parseFloat(element.style.left) || 0;
+                initialY = parseFloat(element.style.top) || 0;
+
+                highlightSelectedElement(element);
+
+                document.addEventListener('mousemove', moveElement);
+                document.addEventListener('mouseup', stopDragging);
+            });
+
+            function moveElement(event) {
+                if (isDragging) {
+                    const dx = event.clientX - startX;
+                    const dy = event.clientY - startY;
+                    element.style.left = `${initialX + dx}px`;
+                    element.style.top = `${initialY + dy}px`;
+                }
+            }
+
+            function stopDragging() {
+                isDragging = false;
+                document.removeEventListener('mousemove', moveElement);
+                document.removeEventListener('mouseup', stopDragging);
+                removeHighlightFromElements();
+            }
+
+            element.addEventListener('click', () => {
+                selectedElement = element;
+                highlightSelectedElement(element);
+            });
+        }
+
+        function makeResizable(element) {
+            const resizeHandle = element.querySelector('.resize-handle');
+            if (resizeHandle) {
+                resizeHandle.addEventListener('mousedown', (event) => {
+                    const startWidth = element.offsetWidth;
+                    const startHeight = element.offsetHeight;
+                    const startX = event.clientX;
+                    const startY = event.clientY;
+
+                    const resizeElement = (resizeEvent) => {
+                        const newWidth = startWidth + (resizeEvent.clientX - startX);
+                        const newHeight = startHeight + (resizeEvent.clientY - startY);
+                        element.style.width = `${newWidth}px`;
+                        element.style.height = `${newHeight}px`;
+                    };
+
+                    const stopResizing = () => {
+                        document.removeEventListener('mousemove', resizeElement);
+                        document.removeEventListener('mouseup', stopResizing);
+                    };
+
+                    document.addEventListener('mousemove', resizeElement);
+                    document.addEventListener('mouseup', stopResizing);
+                    event.stopPropagation(); // Prevent triggering the element drag
+                });
+            }
+        }
+
+        function highlightSelectedElement(element) {
+            removeHighlightFromElements();
+            element.classList.add('selected');
+        }
+
+        function removeHighlightFromElements() {
+            const allElements = canvas.children;
+            for (let i = 0; i < allElements.length; i++) {
+                allElements[i].classList.remove('selected');
+            }
+        }
+
+        deleteBtn.addEventListener('click', () => {
+            if (selectedElement) {
+                canvas.removeChild(selectedElement);
+                selectedElement = null;
+            }
+        });
+
+        canvas.addEventListener('click', (event) => {
+            if (event.target === canvas) {
+                selectedElement = null;
+                removeHighlightFromElements();
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const ctx = hiddenCanvas.getContext('2d');
+            hiddenCanvas.width = canvas.offsetWidth;
+            hiddenCanvas.height = canvas.offsetHeight;
+
+            // Draw background color
+            ctx.fillStyle = bgColorInput.value;
+            ctx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+
+            
+            const bgImage = canvas.style.backgroundImage;
+            if (bgImage) {
+                const img = new Image();
+                img.src = bgImage.slice(5, -2); 
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                    drawElements(ctx); 
+                };
+            } else {
+                drawElements(ctx); 
+            }
+        });
+
+        function drawElements(ctx) {
+    const elements = canvas.children;
+    const promises = []; // To handle asynchronous image loading
+
+    for (let i = 0; i < elements.length; i++) {
+        const element = elements[i];
+        if (element.tagName === 'DIV') {
+            // Check if the element has the 'emoji' class to determine if it's a shape
+            if (element.classList.contains('emoji')) {
+                // Draw emoji shapes
+                ctx.font = `${element.style.fontSize} sans-serif`;
+                ctx.fillStyle = element.style.color; // Use the shape's color
+                ctx.fillText(
+                    element.textContent,
+                    parseFloat(element.style.left),
+                    parseFloat(element.style.top) + parseFloat(element.style.fontSize)
+                );
+            } else {
+                // Draw text elements
+                ctx.font = `${element.style.fontWeight} ${element.style.fontSize} sans-serif`;
+                ctx.fillStyle = element.style.color;
+                ctx.fillText(
+                    element.textContent,
+                    parseFloat(element.style.left),
+                    parseFloat(element.style.top) + parseFloat(element.style.fontSize)
+                );
+            }
+        } else if (element.tagName === 'IMG') {
+            // Draw images
+            const img = new Image();
+            img.src = element.src; // Use the correct source for the uploaded image
+            promises.push(new Promise((resolve) => {
+                img.onload = function() {
+                    ctx.drawImage(img, parseFloat(element.style.left), parseFloat(element.style.top), element.offsetWidth, element.offsetHeight);
+                    resolve();
+                };
+                img.onerror = function() {
+                    resolve(); // Resolve even if there's an error to avoid hanging
+                };
+            }));
+        }
+    }
+
+    // Wait for all images to load before downloading
+    Promise.all(promises).then(() => {
+        downloadImage(); // Call download after drawing all elements
+    });
+}
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'design.png';
+            link.href = hiddenCanvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
